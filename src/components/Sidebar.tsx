@@ -19,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
         { to: '/tasks', icon: Calendar, label: 'Schedules' },
         { to: '/gateways', icon: Network, label: 'Gateways' },
         { to: '/network', icon: Settings, label: 'Network' },
-        { to: '/admin', icon: Users, label: 'Admin', requiresSuper: true },
+        { to: '/admin', icon: Users, label: 'Admin', requiresAdminOrSupervisor: true },
     ];
 
     return (
@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
 
             <nav className="sidebar-nav">
                 {navItems.map((item) => {
-                    if (item.requiresSuper && role !== 'Super Admin') return null;
+                    if (item.requiresAdminOrSupervisor && role !== 'Admin' && role !== 'Supervisor') return null;
                     return (
                         <NavLink
                             key={item.to}

@@ -42,6 +42,24 @@ body {
   overflow-x: hidden;
 }
 
+/* Global Form Resets to fix browser native "Light Mode" overrides on dropdowns */
+input,
+select,
+textarea,
+option {
+  background-color: #111827;
+  color: white;
+  color-scheme: dark;
+}
+
+/* Optional: style focus states globally if needed */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 a {
   color: var(--color-primary);
   text-decoration: none;

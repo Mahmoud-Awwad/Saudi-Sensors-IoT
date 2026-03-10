@@ -1,67 +1,93 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, ArrowRight, Network } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import './Login.css';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Mocking auth delay
-        setTimeout(() => {
-            setIsLoading(false);
+        setError('');
+
+        const success = await login(email, password);
+
+        if (success) {
             navigate('/');
-        }, 800);
+        } else {
+            setError('Invalid email or password.');
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-[var(--color-bg-base)]">
-            {/* Abstract Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[var(--color-primary)] opacity-10 blur-[120px] rounded-full pointer-events-none"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-[var(--color-info)] opacity-10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="login-container">
+            {/* Left Column: Form Container */}
+            <div className="login-form-area">
 
-            <div className="glass-panel w-full max-w-md p-8 relative z-10 mx-4">
-                <div className="flex flex-col items-center mb-8">
-                    <img src="/assets/logo.png" alt="Saudi Sensors" className="h-16 mb-4 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                    <h1 className="text-2xl font-bold text-white mb-2 text-center">Smart City Platform</h1>
-                    <p className="text-[var(--color-text-muted)] text-center text-sm">Sign in to manage IoT assets and projects.</p>
+                {/* Brand Header */}
+                <div className="login-brand">
+                    <img
+                        src="/assets/logo.png"
+                        alt="Saudi Sensors"
+                        className="login-logo"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            // Fallback icon if logo fails to load
+                            e.currentTarget.parentElement!.innerHTML = '<div class="login-logo-fallback">SS</div>';
+                        }}
+                    />
+                    <h1 className="login-title">Saudi Sensors <span>IoT</span></h1>
                 </div>
 
-                <form onSubmit={handleLogin} className="flex flex-col gap-5">
-                    <div>
-                        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">Email Address</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <User size={18} className="text-[var(--color-text-muted)]" />
-                            </div>
+                <div className="login-welcome">
+                    <h2>Welcome back</h2>
+                    <p>Enter your credentials to access the Smart City control center and manage your connected infrastructure.</p>
+                </div>
+
+                {error && (
+                    <div className="login-error">
+                        <div className="error-dot"></div>
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleLogin} className="login-form">
+                    <div className="form-group">
+                        <label>Email Address</label>
+                        <div className="input-wrapper">
+                            <User size={20} className="input-icon" />
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
-                                className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg py-2.5 pl-10 pr-4 text-white outline-none focus:border-[var(--color-primary)] transition-colors"
                                 placeholder="admin@saudisensors.com"
                             />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">Password</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Lock size={18} className="text-[var(--color-text-muted)]" />
-                            </div>
+                    <div className="form-group">
+                        <div className="form-header">
+                            <label>Password</label>
+                            <a href="#" className="forgot-password">Forgot password?</a>
+                        </div>
+                        <div className="input-wrapper">
+                            <Lock size={20} className="input-icon" />
                             <input
                                 type="password"
                                 required
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg py-2.5 pl-10 pr-4 text-white outline-none focus:border-[var(--color-primary)] transition-colors"
                                 placeholder="••••••••"
+                                className="password-input"
                             />
                         </div>
                     </div>
@@ -69,15 +95,54 @@ export const Login: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="btn-primary w-full justify-center py-3 text-lg mt-2 relative overflow-hidden group"
+                        className="btn-login"
                     >
                         {isLoading ? 'Authenticating...' : 'Sign In'}
-                        <div className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                        {!isLoading && <ArrowRight size={20} className="btn-icon-right" />}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
-                    Protected by Saudi Sensors Security Validation
+                <div className="login-footer">
+                    <p>© 2026 Saudi Sensors. Supported by Advanced IoT Security Protocols.</p>
+                </div>
+            </div>
+
+            {/* Right Column: Hero Image Background */}
+            <div className="login-hero-area">
+                {/* The actual generated image */}
+                <div
+                    className="login-hero-bg"
+                    style={{ backgroundImage: "url('/assets/login-bg.png')" }}
+                ></div>
+
+                {/* Gradient overlays to blend it into the dark theme */}
+                <div className="login-hero-overlay-x"></div>
+                <div className="login-hero-overlay-y"></div>
+
+                {/* Floating Stats Glass Panel (Decorative) */}
+                <div className="login-stats-panel">
+                    <div className="stats-header">
+                        <div className="stats-icon-bg">
+                            <Network size={24} />
+                        </div>
+                        <div>
+                            <div className="stats-title">Network Status</div>
+                            <div className="stats-status">
+                                <div className="status-dot"></div>
+                                All nodes operational
+                            </div>
+                        </div>
+                    </div>
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-label">Active Gateways</div>
+                            <div className="stat-value">142</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-label">Managed Lamps</div>
+                            <div className="stat-value">8,490</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
