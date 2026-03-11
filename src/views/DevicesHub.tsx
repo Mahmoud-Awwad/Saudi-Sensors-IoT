@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useProject } from '../context/ProjectContext';
 import { Lightbulb, Network, Search } from 'lucide-react';
+import { LoraApi } from '../api/apiClient';
 import './DevicesHub.css';
 
 // --- Types ---
@@ -74,28 +75,108 @@ export const DevicesHub: React.FC = () => {
     const filteredLamps = contextFilteredLamps.filter(l => lampFilter === 'All' ? true : l.status === lampFilter);
     const filteredGateways = contextFilteredGateways.filter(g => gatewayFilter === 'All' ? true : g.status === gatewayFilter);
 
-    const handleLampToggle = (id: string, newState: boolean) => {
+    const handleLampToggle = async (id: string, newState: boolean) => {
         if (!canControlDevice()) return alert("Permission Denied.");
-        setLamps(prev => prev.map(l => l.id === id ? { ...l, dimming: newState ? 100 : 0 } : l));
+        const lamp = lamps.find(l => l.id === id);
+        if (!lamp) return;
+        
+        const lampCodeMatch = id.match(/\d+/);
+        const lampCode = lampCodeMatch ? parseInt(lampCodeMatch[0], 10) : 0;
+        const dimmingVal = newState ? 100 : 0;
+
+        try {
+            const res = await LoraApi.lampSingleDimming(lamp.concentrator, lampCode, dimmingVal);
+            if (res.succeed) {
+                setLamps(prev => prev.map(l => l.id === id ? { ...l, dimming: dimmingVal } : l));
+            } else {
+                alert(`Failed: ${res.msg}`);
+            }
+        } catch (error) {
+            alert(`Error updating lamp ${id}`);
+        }
     };
 
-    const handleLampDimming = (id: string, val: number) => {
+    const handleLampDimming = async (id: string, val: number) => {
         if (!canControlDevice()) return alert("Permission Denied.");
-        setLamps(prev => prev.map(l => l.id === id ? { ...l, dimming: val } : l));
+        const lamp = lamps.find(l => l.id === id);
+        if (!lamp) return;
+        
+        const lampCodeMatch = id.match(/\d+/);
+        const lampCode = lampCodeMatch ? parseInt(lampCodeMatch[0], 10) : 0;
+
+        try {
+            const res = await LoraApi.lampSingleDimming(lamp.concentrator, lampCode, val);
+            if (res.succeed) {
+                setLamps(prev => prev.map(l => l.id === id ? { ...l, dimming: val } : l));
+            } else {
+                alert(`Failed: ${res.msg}`);
+            }
+        } catch (error) {
+            alert(`Error updating lamp ${id}`);
+        }
     };
 
-    const handleGatewayToggle = (id: string, newState: boolean) => {
+    const handleGatewayToggle = async (id: string, newState: boolean) => {
         if (!canControlDevice()) return alert("Permission Denied.");
-        setGateways(prev => prev.map(g => g.id === id ? { ...g, dimming: newState ? 100 : 0 } : g));
+        const dimmingVal = newState ? 100 : 0;
+
+        try {
+            const res = await LoraApi.lampAllDimming(id, dimmingVal);
+            if (res.succeed) {
+                setGateways(prev => prev.map(g => g.id === id ? { ...g, dimming: dimmingVal } : g));
+            } else {
+                alert(`Failed: ${res.msg}`);
+            }
+        } catch (error) {
+            alert(`Error updating gateway ${id}`);
+        }
     };
 
-    const handleGatewayDimming = (id: string, val: number) => {
+    const handleGatewayDimming = async (id: string, val: number) => {
         if (!canControlDevice()) return alert("Permission Denied.");
-        setGateways(prev => prev.map(g => g.id === id ? { ...g, dimming: val } : g));
+        
+        try {
+            const res = await LoraApi.lampAllDimming(id, val);
+            if (res.succeed) {
+                setGateways(prev => prev.map(g => g.id === id ? { ...g, dimming: val } : g));
+            } else {
+                alert(`Failed: ${res.msg}`);
+            }
+        } catch (error) {
+            alert(`Error updating gateway ${id}`);
+        }
     };
 
-    const handleReadMetrics = (id: string, type: 'Lamp' | 'Gateway') => {
-        alert(`Pulling real-time metrics for ${type}: ${id}...`);
+    const handleReadMetrics = async (id: string, type: 'Lamp' | 'Gateway') => {
+        try {
+            if (type === 'Gateway') {
+                const res = await LoraApi.queryDeviceWorkState(id);
+                if (res.succeed) {
+                    alert(`Gateway Metrics: ${JSON.stringify(res.data, null, 2)}`);
+                } else {
+                    alert(`Failed to read gateway metrics: ${res.msg}`);
+                }
+            } else if (type === 'Lamp') {
+                const lamp = lamps.find(l => l.id === id);
+                if (!lamp) return;
+                const res = await LoraApi.queryLampList(lamp.concentrator);
+                if (res.succeed) {
+                    const lampCodeMatch = id.match(/\d+/);
+                    const lampCode = lampCodeMatch ? parseInt(lampCodeMatch[0], 10) : -1;
+                    const specificLamp = res.data?.find(l => l.lampUid === String(lampCode) || l.code === lampCode);
+                    
+                    if (specificLamp) {
+                         alert(`Lamp Metrics: ${JSON.stringify(specificLamp, null, 2)}`);
+                    } else {
+                         alert(`Lamp Metrics: ${JSON.stringify(res.data, null, 2)}`);
+                    }
+                } else {
+                    alert(`Failed to read lamp metrics: ${res.msg}`);
+                }
+            }
+        } catch (error) {
+            alert(`Error reading metrics for ${type} ${id}`);
+        }
     };
 
     return (

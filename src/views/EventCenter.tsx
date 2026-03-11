@@ -75,8 +75,8 @@ export const EventCenter: React.FC = () => {
     });
 
     return (
-        <div className="flex flex-col gap-6 h-full">
-            <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-8 h-full">
+            <div className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-2xl font-bold text-white mb-1">Alarm Management</h1>
                     <p className="text-[var(--color-text-muted)]">Real-time incident tracking, filtering, and manual validation.</p>
@@ -84,7 +84,7 @@ export const EventCenter: React.FC = () => {
             </div>
 
             {/* Smart Dashboard Top */}
-            <div className="event-dashboard-grid mb-2">
+            <div className="event-dashboard-grid mb-4">
                 <div
                     className={`dashboard-card glass-panel cursor-pointer transition-all hover:bg-[rgba(255,255,255,0.05)] ${severityFilter === 'All' ? 'ring-2 ring-[var(--color-primary)]' : ''}`}
                     onClick={() => setSeverityFilter('All')}
@@ -132,8 +132,8 @@ export const EventCenter: React.FC = () => {
             <div className="events-grid">
 
                 {/* Incident Feed */}
-                <div className="glass-panel p-5 flex flex-col gap-4">
-                    <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+                <div className="glass-panel p-7 flex flex-col gap-6">
+                    <div className="flex justify-between items-center mb-6 flex-wrap gap-6">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                             <ShieldAlert style={{ color: 'var(--color-danger)' }} /> Active Alarms
                         </h2>
@@ -159,7 +159,7 @@ export const EventCenter: React.FC = () => {
                     </div>
 
                     {(severityFilter === 'All' || severityFilter === 'Critical' || severityFilter === 'Warning') && (
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-4">
                             {filteredActive.map(inc => (
                                 <div key={inc.id} className="incident-card active">
                                     <div className="flex justify-between items-center">
@@ -226,13 +226,13 @@ export const EventCenter: React.FC = () => {
                 </div>
 
                 {/* Safety Thresholds */}
-                <div className="glass-panel p-5">
-                    <h2 className="text-xl font-bold text-white mb-4">Safety Thresholds</h2>
-                    <p className="text-sm text-[var(--color-text-muted)] mb-6">
+                <div className="glass-panel p-7">
+                    <h2 className="text-xl font-bold text-white mb-6">Safety Thresholds</h2>
+                    <p className="text-sm text-[var(--color-text-muted)] mb-8">
                         Global propagation parameters for autonomous hardware safety fallbacks.
                     </p>
 
-                    <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-8">
                         <div className="threshold-group">
                             <label className="threshold-label text-white">
                                 <span>Max Tilt Angle (Degrees)</span>

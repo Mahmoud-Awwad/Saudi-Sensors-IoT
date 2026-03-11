@@ -1,5 +1,5 @@
 .incident-card {
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -110,17 +110,17 @@
 .events-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .event-dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .dashboard-card {
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
