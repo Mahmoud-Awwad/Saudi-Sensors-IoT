@@ -59,8 +59,9 @@ const mockAlarms: AlarmRule[] = [
 export const AdminAlarms: React.FC = () => {
     const [alarms, setAlarms] = useState<AlarmRule[]>(mockAlarms);
 
-    // Create Modal State
+    // Create/Edit Modal State
     const [showCreate, setShowCreate] = useState(false);
+    const [editingAlarm, setEditingAlarm] = useState<AlarmRule | null>(null);
     const [newType, setNewType] = useState<AlarmType>('Lamp');
     const [newName, setNewName] = useState('');
     const [newSeverity, setNewSeverity] = useState<AlarmSeverity>('Warning');
@@ -116,6 +117,57 @@ export const AdminAlarms: React.FC = () => {
         setNewTargetId('All');
         setNewTargetLevel('Global');
         // useEffect handles resetting the metric selections based on type change
+    };
+
+    const handleUpdateAlarm = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingAlarm) return;
+
+        const finalConditionString = activeMetricDef.formatCondition(metricParamValue);
+
+        const updatedAlarm: AlarmRule = {
+            ...editingAlarm,
+            name: newName,
+            type: newType,
+            severity: newSeverity,
+            targetLevel: newTargetLevel,
+            targetId: newTargetId,
+            condition: finalConditionString
+        };
+
+        setAlarms(alarms.map(a => a.id === editingAlarm.id ? updatedAlarm : a));
+        setEditingAlarm(null);
+
+        // Reset form
+        setNewName('');
+        setNewType('Lamp');
+        setNewTargetId('All');
+        setNewTargetLevel('Global');
+    };
+
+    const openEditModal = (alarm: AlarmRule) => {
+        setEditingAlarm(alarm);
+        setNewName(alarm.name);
+        setNewType(alarm.type);
+        setNewSeverity(alarm.severity);
+        setNewTargetLevel(alarm.targetLevel);
+        setNewTargetId(alarm.targetId);
+
+        // Try to reverse-engineer selected metric from condition string
+        const list = alarm.type === 'Lamp' ? LAMP_METRICS : GATEWAY_METRICS;
+        let foundMetric = list.find(m => alarm.condition.startsWith(m.label));
+
+        if (foundMetric) {
+            setSelectedMetricId(foundMetric.id);
+            if (foundMetric.hasParam) {
+                const match = alarm.condition.match(/\d+(\.\d+)?/);
+                if (match) {
+                    setMetricParamValue(Number(match[0]));
+                }
+            } else {
+                setMetricParamValue(undefined);
+            }
+        }
     };
 
     const toggleActive = (id: string) => {
@@ -230,6 +282,103 @@ export const AdminAlarms: React.FC = () => {
                 </form>
             )}
 
+            {/* Edit Form */}
+            {editingAlarm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <form onSubmit={handleUpdateAlarm} className="glass-panel w-full max-w-4xl p-6 border-[var(--color-primary)] border animate-fade-in relative shadow-2xl">
+                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <Edit2 size={18} /> Edit Alarm Rule: {editingAlarm.name}
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                            <div className="flex flex-col gap-4">
+                                <div>
+                                    <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Rule Name</label>
+                                    <input required type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-[rgba(0,0,0,0.2)] border border-[rgba(255,255,255,0.1)] rounded p-2 text-white outline-none focus:border-[var(--color-primary)]" placeholder="e.g. Node Voltage Spike" />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Alarm Type</label>
+                                        <select value={newType} onChange={e => setNewType(e.target.value as AlarmType)} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)]">
+                                            <option value="Lamp" className="bg-[#1f2937] text-white">Lamp Asset</option>
+                                            <option value="Gateway" className="bg-[#1f2937] text-white">Gateway Controller</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Severity</label>
+                                        <select value={newSeverity} onChange={e => setNewSeverity(e.target.value as AlarmSeverity)} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)]">
+                                            <option value="Info" className="bg-[#1f2937] text-blue-400">Info</option>
+                                            <option value="Warning" className="bg-[#1f2937] text-yellow-400">Warning</option>
+                                            <option value="Critical" className="bg-[#1f2937] text-red-400">Critical</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4 p-4 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)]">
+                                <div className="flex gap-4 items-end">
+                                    <div className="flex-1">
+                                        <label className="text-sm text-[var(--color-primary)] font-bold mb-1 block">Trigger Condition Metric</label>
+                                        <select value={selectedMetricId} onChange={handleMetricChange} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)] font-mono text-sm leading-relaxed">
+                                            <optgroup label={`${newType} Available Metrics`} className="bg-[#1f2937] text-gray-400">
+                                                {currentMetricsList.map(metric => (
+                                                    <option key={metric.id} value={metric.id} className="text-white">{metric.label}</option>
+                                                ))}
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    {activeMetricDef.hasParam && (
+                                        <div className="w-32 animate-fade-in">
+                                            <label className="text-xs text-[var(--color-text-muted)] mb-1 block">{activeMetricDef.paramLabel}</label>
+                                            <div className="relative">
+                                                <input
+                                                    required
+                                                    type="number"
+                                                    value={metricParamValue ?? ''}
+                                                    onChange={e => setMetricParamValue(Number(e.target.value))}
+                                                    className="w-full bg-[#111827] border border-gray-700 rounded p-2 pr-8 text-white outline-none focus:border-[var(--color-primary)] font-mono text-sm"
+                                                />
+                                                <span className="absolute right-3 top-2.5 text-xs text-gray-500">{activeMetricDef.paramUnit}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <div>
+                                        <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Target Scope</label>
+                                        <select value={newTargetLevel} onChange={e => setNewTargetLevel(e.target.value as TargetLevel)} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)]">
+                                            <option value="Global" className="bg-[#1f2937] text-white">Global (All)</option>
+                                            <option value="Project" className="bg-[#1f2937] text-white">Project Level</option>
+                                            <option value="District" className="bg-[#1f2937] text-white">District Level</option>
+                                            <option value="Gateway" className="bg-[#1f2937] text-white">Gateway Level</option>
+                                            <option value="Pole" className="bg-[#1f2937] text-white">Pole Level</option>
+                                            <option value="Node" className="bg-[#1f2937] text-white">Specific Node</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Target Assignment ID</label>
+                                        <input type="text" value={newTargetId} onChange={e => setNewTargetId(e.target.value)} disabled={newTargetLevel === 'Global'} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)] disabled:opacity-50" placeholder={newTargetLevel === 'Global' ? "All Assets" : "Enter ID e.g. proj-1"} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 justify-end mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                            <button type="button" className="btn-secondary" onClick={() => {
+                                setEditingAlarm(null);
+                                setNewName('');
+                                setNewType('Lamp');
+                                setNewTargetId('All');
+                                setNewTargetLevel('Global');
+                            }}>Cancel</button>
+                            <button type="submit" className="btn-primary">Update Rule</button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
             {/* Configured Alarms List */}
             <div className="glass-panel flex-1 overflow-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
@@ -279,7 +428,7 @@ export const AdminAlarms: React.FC = () => {
                                     {alarm.condition}
                                 </td>
                                 <td className="p-4 flex gap-2 justify-end">
-                                    <button className="btn-icon text-blue-400 hover:text-blue-300"><Edit2 size={16} /></button>
+                                    <button className="btn-icon text-blue-400 hover:text-blue-300" onClick={() => openEditModal(alarm)}><Edit2 size={16} /></button>
                                     <button className="btn-icon text-red-400 hover:text-red-300" onClick={() => handleDelete(alarm.id)}><Trash2 size={16} /></button>
                                 </td>
                             </tr>

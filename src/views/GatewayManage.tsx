@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePermissions } from '../hooks/usePermissions';
+import { useProject } from '../context/ProjectContext';
 import { Network, Activity, Settings, RefreshCw } from 'lucide-react';
 
 interface Gateway {
@@ -16,14 +17,24 @@ interface Gateway {
 }
 
 const initialGateways: Gateway[] = [
-    { id: '1', driveUid: '202212070011', ip: '192.168.1.10', status: 'Online', signalDb: -65, lastHeartbeat: 'Just now', apn: 'STC-IoT-Fast', project: 'Riyadh Central', district: 'Downtown Sector A', assignedLamps: 84 },
-    { id: '2', driveUid: '202212070012', ip: '192.168.1.11', status: 'Online', signalDb: -78, lastHeartbeat: '2 mins ago', apn: 'STC-IoT-Fast', project: 'Jeddah Coastal', district: 'Marina Bay', assignedLamps: 112 },
+    { id: '1', driveUid: '202212070011', ip: '192.168.1.10', status: 'Online', signalDb: -65, lastHeartbeat: 'Just now', apn: 'STC-IoT-Fast', project: 'Riyadh Central District', district: 'Downtown Sector A', assignedLamps: 84 },
+    { id: '3', driveUid: '202212070013', ip: '192.168.1.12', status: 'Offline', signalDb: -80, lastHeartbeat: '2 hrs ago', apn: 'STC-IoT-Fast', project: 'Riyadh Central District', district: 'North Sector B', assignedLamps: 45 },
+    { id: '2', driveUid: '202212070012', ip: '192.168.1.11', status: 'Online', signalDb: -78, lastHeartbeat: '2 mins ago', apn: 'STC-IoT-Fast', project: 'Jeddah Coastal Hub', district: 'Marina Bay', assignedLamps: 112 },
+    { id: '4', driveUid: '202212070014', ip: '192.168.1.13', status: 'Online', signalDb: -62, lastHeartbeat: '1 min ago', apn: 'STC-IoT-Fast', project: 'Jeddah Coastal Hub', district: 'Port Area', assignedLamps: 200 },
 ];
 
 export const GatewayManage: React.FC = () => {
+    const { currentProject, currentGateway } = useProject();
     const { canUpdateSettings } = usePermissions();
     const [gateways, setGateways] = useState(initialGateways);
     const [configuringGateway, setConfiguringGateway] = useState<Gateway | null>(null);
+
+    // Filter Logic
+    const displayedGateways = gateways.filter(gw => {
+        if (currentProject?.id === 'all') return true;
+        if (currentGateway !== 'all') return gw.driveUid === currentGateway;
+        return currentProject?.driveUids.includes(gw.driveUid);
+    });
 
     // Modal Form State
     const [formApn, setFormApn] = useState('');
@@ -70,7 +81,7 @@ export const GatewayManage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gateways.map(gw => (
+                {displayedGateways.map(gw => (
                     <div key={gw.id} className="glass-panel p-5">
                         <div className="flex justify-between items-center mb-4 border-b border-[var(--color-border)] pb-3">
                             <div className="flex items-center gap-3">

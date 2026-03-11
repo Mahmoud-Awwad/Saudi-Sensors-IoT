@@ -36,8 +36,9 @@ export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'users' | 'infra' | 'alarms'>('users');
     const [users, setUsers] = useState<UserData[]>(mockUsers);
 
-    // Add User Modal State
+    // Add/Edit User Modal State
     const [showAddUser, setShowAddUser] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [newUserName, setNewUserName] = useState('');
     const [newUserEmail, setNewUserEmail] = useState('');
     const [newUserRole, setNewUserRole] = useState<UserRole>('Viewer');
@@ -79,6 +80,39 @@ export const AdminPanel: React.FC = () => {
         setNewUserScopes([]);
     };
 
+    const handleUpdateUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        if (editingUser.role === 'Admin' && newUserRole !== 'Admin' && editingUser.id === currentUser?.id) {
+            alert("You cannot remove your own Admin privileges.");
+            return;
+        }
+
+        const updatedUser: UserData = {
+            ...editingUser,
+            name: newUserName,
+            email: newUserEmail,
+            role: newUserRole,
+            accessibleEntities: newUserRole === 'Admin' ? ['All'] : newUserScopes.length > 0 ? newUserScopes : ['None assigned']
+        };
+
+        setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
+        setEditingUser(null);
+        setNewUserName('');
+        setNewUserEmail('');
+        setNewUserRole('Viewer');
+        setNewUserScopes([]);
+    };
+
+    const openEditModal = (user: UserData) => {
+        setEditingUser(user);
+        setNewUserName(user.name);
+        setNewUserEmail(user.email);
+        setNewUserRole(user.role);
+        setNewUserScopes(user.accessibleEntities);
+    };
+
     const handleDeleteUser = (id: string, targetRole: string) => {
         if (id === currentUser?.id) {
             return alert("You cannot delete your own account.");
@@ -102,21 +136,21 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex gap-4 mb-6 border-b border-[rgba(255,255,255,0.1)] pb-px">
+            <div className="tab-container">
                 <button
-                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition-colors ${activeTab === 'users' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-white'}`}
+                    className={`btn-tab ${activeTab === 'users' ? 'active' : ''}`}
                     onClick={() => setActiveTab('users')}
                 >
                     <Users size={18} /> User Management
                 </button>
                 <button
-                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition-colors ${activeTab === 'infra' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-white'}`}
+                    className={`btn-tab ${activeTab === 'infra' ? 'active' : ''}`}
                     onClick={() => setActiveTab('infra')}
                 >
                     <Server size={18} /> Infrastructure Hierarchy
                 </button>
                 <button
-                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition-colors ${activeTab === 'alarms' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-white'}`}
+                    className={`btn-tab ${activeTab === 'alarms' ? 'active' : ''}`}
                     onClick={() => setActiveTab('alarms')}
                 >
                     <BellRing size={18} /> Alarm Rules
@@ -184,6 +218,62 @@ export const AdminPanel: React.FC = () => {
                             </form>
                         )}
 
+                        {/* Edit User Modal Form */}
+                        {editingUser && (
+                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                                <form onSubmit={handleUpdateUser} className="glass-panel w-full max-w-4xl p-6 border-[var(--color-primary)] border animate-fade-in relative shadow-2xl">
+                                    <h3 className="text-lg font-bold text-white mb-4">Edit User: {editingUser.name}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Full Name</label>
+                                            <input required type="text" value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full bg-[rgba(0,0,0,0.2)] border border-[rgba(255,255,255,0.1)] rounded p-2 text-white outline-none focus:border-[var(--color-primary)]" placeholder="John Doe" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Email</label>
+                                            <input required type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full bg-[rgba(0,0,0,0.2)] border border-[rgba(255,255,255,0.1)] rounded p-2 text-white outline-none focus:border-[var(--color-primary)]" placeholder="user@saudisensors.com" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-[var(--color-text-muted)] mb-1 block">Role</label>
+                                            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value as UserRole)} className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)]" disabled={editingUser.id === currentUser?.id || (role === 'Supervisor' && (editingUser.role === 'Admin' || editingUser.role === 'Supervisor'))}>
+                                                {role === 'Admin' && <option value="Admin">Admin</option>}
+                                                {role === 'Admin' && <option value="Supervisor">Supervisor</option>}
+                                                <option value="Operator">Operator</option>
+                                                <option value="Viewer">Viewer</option>
+                                            </select>
+                                        </div>
+                                        {newUserRole !== 'Admin' && (
+                                            <div className="md:col-span-3">
+                                                <label className="text-sm text-[var(--color-text-muted)] mb-1 flex items-center justify-between">
+                                                    Scope of Access (ABAC)
+                                                    <span className="text-xs text-blue-400">Hold Ctrl/Cmd to select multiple targets</span>
+                                                </label>
+                                                <select
+                                                    multiple
+                                                    value={newUserScopes}
+                                                    onChange={e => setNewUserScopes(Array.from(e.target.selectedOptions, option => option.value))}
+                                                    className="w-full bg-[#111827] border border-gray-700 rounded p-2 text-white outline-none focus:border-[var(--color-primary)] h-32 custom-scrollbar"
+                                                >
+                                                    {availableScopes.map(scope => (
+                                                        <option key={scope} value={scope} className="p-2 mb-1 rounded hover:bg-[var(--color-primary)] hover:text-black">{scope}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-3 justify-end mt-6">
+                                        <button type="button" className="btn-secondary" onClick={() => {
+                                            setEditingUser(null);
+                                            setNewUserName('');
+                                            setNewUserEmail('');
+                                            setNewUserRole('Viewer');
+                                            setNewUserScopes([]);
+                                        }}>Cancel</button>
+                                        <button type="submit" className="btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
                         <div className="glass-panel">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
@@ -220,7 +310,14 @@ export const AdminPanel: React.FC = () => {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 flex gap-2 justify-end">
-                                                    <button className="btn-icon text-blue-400 hover:text-blue-300" title="Edit User"><Edit2 size={16} /></button>
+                                                    <button
+                                                        className="btn-icon text-blue-400 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        title="Edit User"
+                                                        onClick={() => openEditModal(u)}
+                                                        disabled={role === 'Supervisor' && u.role === 'Admin'}
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
                                                     <button
                                                         className="btn-icon text-red-400 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
                                                         title="Delete User"

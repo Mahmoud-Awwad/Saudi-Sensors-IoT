@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { usePermissions } from '../hooks/usePermissions';
+import { useProject } from '../context/ProjectContext';
 import { Zap, Activity, LightbulbIcon, Power, Network, Hash, MapPin, Eye } from 'lucide-react';
 import './MapMonitor.css';
 
@@ -56,23 +57,39 @@ const createConcentratorIcon = (color: string) => new Icon({
 });
 
 const initialNodes: LampNode[] = [
-    { id: 'Pole-101', type: 'node', lat: 24.7136, lng: 46.6753, status: 'ON', dimming: 80, power: 120, voltage: 220, zoneId: 'Zone-1', concentratorId: 'GW-01' },
-    { id: 'Pole-102', type: 'node', lat: 24.7142, lng: 46.6760, status: 'Has alerts', dimming: 100, power: 155, voltage: 235, zoneId: 'Zone-1', concentratorId: 'GW-01' },
-    { id: 'Pole-103', type: 'node', lat: 24.7125, lng: 46.6745, status: 'OFF', dimming: 0, power: 0, voltage: 220, zoneId: 'Zone-1', concentratorId: 'GW-01' },
-    { id: 'Pole-104', type: 'node', lat: 24.7150, lng: 46.6730, status: 'Offline', dimming: 0, power: 0, voltage: 0, zoneId: 'Zone-2', concentratorId: 'GW-02' },
-    { id: 'Pole-105', type: 'node', lat: 24.7155, lng: 46.6740, status: 'ON', dimming: 100, power: 150, voltage: 220, zoneId: 'Zone-2', concentratorId: 'GW-02' },
+    { id: 'Pole-101', type: 'node', lat: 24.7136, lng: 46.6753, status: 'ON', dimming: 80, power: 120, voltage: 220, zoneId: 'Downtown Sector A', concentratorId: '202212070011' },
+    { id: 'Pole-102', type: 'node', lat: 24.7142, lng: 46.6760, status: 'Has alerts', dimming: 100, power: 155, voltage: 235, zoneId: 'Downtown Sector A', concentratorId: '202212070011' },
+    { id: 'Pole-103', type: 'node', lat: 24.7125, lng: 46.6745, status: 'OFF', dimming: 0, power: 0, voltage: 220, zoneId: 'Downtown Sector A', concentratorId: '202212070011' },
+    { id: 'Pole-104', type: 'node', lat: 24.7210, lng: 46.6810, status: 'Offline', dimming: 0, power: 0, voltage: 0, zoneId: 'North Sector B', concentratorId: '202212070013' },
+    { id: 'Pole-105', type: 'node', lat: 24.7220, lng: 46.6790, status: 'Offline', dimming: 0, power: 0, voltage: 0, zoneId: 'North Sector B', concentratorId: '202212070013' },
+    { id: 'Pole-201', type: 'node', lat: 21.5440, lng: 39.1730, status: 'ON', dimming: 100, power: 150, voltage: 220, zoneId: 'Marina Bay', concentratorId: '202212070012' },
+    { id: 'Pole-202', type: 'node', lat: 21.5510, lng: 39.1810, status: 'Has alerts', dimming: 100, power: 155, voltage: 235, zoneId: 'Port Area', concentratorId: '202212070014' },
 ];
 
 const initialConcentrators: Concentrator[] = [
-    { id: 'GW-01', type: 'concentrator', lat: 24.7130, lng: 46.6750, status: 'ON', signalDb: -65, zoneId: 'Zone-1' },
-    { id: 'GW-02', type: 'concentrator', lat: 24.7160, lng: 46.6735, status: 'Has alerts', signalDb: -85, zoneId: 'Zone-2' },
+    { id: '202212070011', type: 'concentrator', lat: 24.7130, lng: 46.6750, status: 'ON', signalDb: -65, zoneId: 'Downtown Sector A' },
+    { id: '202212070013', type: 'concentrator', lat: 24.7200, lng: 46.6800, status: 'Offline', signalDb: -80, zoneId: 'North Sector B' },
+    { id: '202212070012', type: 'concentrator', lat: 21.5433, lng: 39.1728, status: 'ON', signalDb: -78, zoneId: 'Marina Bay' },
+    { id: '202212070014', type: 'concentrator', lat: 21.5500, lng: 39.1800, status: 'Has alerts', signalDb: -62, zoneId: 'Port Area' },
 ];
 
 export const MapMonitor: React.FC = () => {
+    const { currentProject, currentGateway } = useProject();
     const { canControlDevice } = usePermissions();
     const [nodes, setNodes] = useState(initialNodes);
     const [concentrators] = useState(initialConcentrators);
     const [expandedConc, setExpandedConc] = useState<string | null>(null);
+
+    // Filter Logic
+    const displayedConcentrators = concentrators.filter(conc => {
+        if (currentProject?.id === 'all') return true;
+        if (currentGateway !== 'all') return conc.id === currentGateway;
+        return currentProject?.driveUids.includes(conc.id);
+    });
+
+    const displayedNodes = nodes.filter(node => {
+        return displayedConcentrators.some(c => c.id === node.concentratorId);
+    });
 
     const handleNodeToggle = (id: string, forceState?: boolean) => {
         if (!canControlDevice()) return alert("Permission Denied: Operator level or higher required.");
@@ -148,7 +165,7 @@ export const MapMonitor: React.FC = () => {
                     />
 
                     {/* Render Concentrators */}
-                    {concentrators.map(conc => (
+                    {displayedConcentrators.map(conc => (
                         <Marker key={conc.id} position={[conc.lat, conc.lng]} icon={createConcentratorIcon(getStatusColor(conc.status))}>
                             <Popup>
                                 <div style={{ width: '300px', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
@@ -209,7 +226,11 @@ export const MapMonitor: React.FC = () => {
 
                                                     <button
                                                         onClick={() => setExpandedConc(expandedConc === conc.id ? null : conc.id)}
-                                                        className="w-full mt-3 text-xs flex justify-center items-center gap-1 text-[var(--color-primary)] hover:text-white transition-colors py-1 border border-[var(--color-border)] rounded bg-[rgba(255,255,255,0.05)]"
+                                                        className="btn-glass w-full mt-3 text-xs py-2"
+                                                        style={{
+                                                            background: expandedConc === conc.id ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, rgba(20, 30, 48, 0.4) 0%, rgba(5, 8, 16, 0.6) 100%)',
+                                                            color: expandedConc === conc.id ? 'white' : 'var(--color-primary)'
+                                                        }}
                                                     >
                                                         <Eye size={12} /> {expandedConc === conc.id ? 'Hide Node List' : 'View Node List'}
                                                     </button>
@@ -234,7 +255,7 @@ export const MapMonitor: React.FC = () => {
                     ))}
 
                     {/* Render Nodes (Lamps) */}
-                    {nodes.map(node => (
+                    {displayedNodes.map(node => (
                         <Marker key={node.id} position={[node.lat, node.lng]} icon={createNodeIcon(getStatusColor(node.status))}>
                             <Popup>
                                 <div style={{ width: '300px', overflowX: 'hidden' }}>

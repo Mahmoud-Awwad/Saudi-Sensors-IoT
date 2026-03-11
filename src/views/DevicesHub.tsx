@@ -46,7 +46,7 @@ const mockGateways: GatewayData[] = [
 
 export const DevicesHub: React.FC = () => {
     const { canControlDevice } = usePermissions();
-    const { currentProject } = useProject();
+    const { currentProject, currentGateway } = useProject();
     const [activeTab, setActiveTab] = useState<'Lamps' | 'Gateways'>('Lamps');
 
     // Derived state for Lamps
@@ -58,8 +58,21 @@ export const DevicesHub: React.FC = () => {
     const [gatewayFilter, setGatewayFilter] = useState<'All' | 'Online' | 'Offline'>('All');
 
     // --- Handlers ---
-    const filteredLamps = lamps.filter(l => lampFilter === 'All' ? true : l.status === lampFilter);
-    const filteredGateways = gateways.filter(g => gatewayFilter === 'All' ? true : g.status === gatewayFilter);
+    const contextFilteredLamps = lamps.filter(l => {
+        if (currentProject?.id === 'all') return true;
+        if (currentGateway !== 'all') return l.concentrator === currentGateway;
+        // Mock simplification: assume concentrator ID matches driveUid
+        return currentProject?.driveUids.includes(l.concentrator) || true; // Fallback for mock mismatch
+    });
+
+    const contextFilteredGateways = gateways.filter(g => {
+        if (currentProject?.id === 'all') return true;
+        if (currentGateway !== 'all') return g.id === currentGateway;
+        return currentProject?.driveUids.includes(g.id) || true; // Fallback for mock mismatch
+    });
+
+    const filteredLamps = contextFilteredLamps.filter(l => lampFilter === 'All' ? true : l.status === lampFilter);
+    const filteredGateways = contextFilteredGateways.filter(g => gatewayFilter === 'All' ? true : g.status === gatewayFilter);
 
     const handleLampToggle = (id: string, newState: boolean) => {
         if (!canControlDevice()) return alert("Permission Denied.");

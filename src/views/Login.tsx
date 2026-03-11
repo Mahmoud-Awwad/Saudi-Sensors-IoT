@@ -53,13 +53,13 @@ export const Login: React.FC = () => {
                 </div>
 
                 {error && (
-                    <div className="login-error">
+                    <div className="login-error animate-fade-in">
                         <div className="error-dot"></div>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="login-form">
+                <form onSubmit={handleLogin} className="login-form animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <div className="form-group">
                         <label>Email Address</label>
                         <div className="input-wrapper">
@@ -134,11 +134,11 @@ export const Login: React.FC = () => {
                         </div>
                     </div>
                     <div className="stats-grid">
-                        <div className="stat-card">
+                        <div className="stat-card" style={{ animationDelay: '0.2s', animation: 'fadeIn 0.5s ease-out backwards' }}>
                             <div className="stat-label">Active Gateways</div>
                             <div className="stat-value">142</div>
                         </div>
-                        <div className="stat-card">
+                        <div className="stat-card" style={{ animationDelay: '0.3s', animation: 'fadeIn 0.5s ease-out backwards' }}>
                             <div className="stat-label">Managed Lamps</div>
                             <div className="stat-value">8,490</div>
                         </div>

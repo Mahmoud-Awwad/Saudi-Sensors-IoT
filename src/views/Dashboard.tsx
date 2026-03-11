@@ -21,20 +21,43 @@ const efficiencyData = [
 const COLORS = ['#92de8b', '#ef4444'];
 
 export const Dashboard: React.FC = () => {
-    const { currentProject } = useProject();
+    const { currentProject, currentGateway } = useProject();
+
+    // Dynamically adjust mock metrics based on context depth
+    const isAllProjects = currentProject?.id === 'all';
+    const isSingleGateway = currentGateway !== 'all';
+
+    let totalEnergy = '1,240 kWh';
+    let activeNodes = '342 / 350';
+    let alertsCount = '3';
+    let healthStatus = '98%';
+
+    if (isAllProjects) {
+        totalEnergy = '2,480 kWh';
+        activeNodes = '684 / 700';
+        alertsCount = '7';
+    } else if (isSingleGateway) {
+        totalEnergy = '310 kWh';
+        activeNodes = '85 / 85';
+        alertsCount = '0';
+        healthStatus = '100%';
+    }
 
     const metrics = [
-        { label: 'Total Energy', value: '1,240 kWh', icon: Zap, color: 'var(--color-primary)' },
-        { label: 'Active Nodes', value: '342 / 350', icon: CheckCircle2, color: 'var(--color-success)' },
-        { label: 'Alerts', value: '3', icon: AlertTriangle, color: 'var(--color-warning)' },
-        { label: 'Network Health', value: '98%', icon: Activity, color: 'var(--color-info)' },
+        { label: 'Total Energy', value: totalEnergy, icon: Zap, color: 'var(--color-primary)' },
+        { label: 'Active Nodes', value: activeNodes, icon: CheckCircle2, color: 'var(--color-success)' },
+        { label: 'Alerts', value: alertsCount, icon: AlertTriangle, color: 'var(--color-warning)' },
+        { label: 'Network Health', value: healthStatus, icon: Activity, color: 'var(--color-info)' },
     ];
 
     return (
         <div>
             <div className="dashboard-header">
                 <h1 className="dashboard-title">System Overview</h1>
-                <p className="dashboard-subtitle">Live analytics for {currentProject?.name}</p>
+                <p className="dashboard-subtitle">
+                    Live analytics for {currentProject?.name}
+                    {currentGateway !== 'all' ? ` > Gateway ${currentGateway}` : ''}
+                </p>
             </div>
 
             <div className="metrics-grid">

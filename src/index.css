@@ -282,3 +282,107 @@ a:hover {
 .h-full {
   height: 100%;
 }
+
+/* Custom UI Theme Fixes */
+.btn-dropdown {
+  background: transparent;
+  color: var(--color-text-main);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.btn-dropdown:hover {
+  background: rgba(146, 222, 139, 0.1);
+  color: var(--color-primary);
+}
+
+.btn-dropdown.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+.btn-tab {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.btn-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.btn-tab.active {
+  background: rgba(146, 222, 139, 0.15);
+  color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(146, 222, 139, 0.1);
+}
+
+.btn-chip {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-chip:hover {
+  background: rgba(146, 222, 139, 0.1);
+  color: var(--color-primary);
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all var(--transition-normal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.btn-glass.w-full {
+  width: 100%;
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.tab-container {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.375rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: fit-content;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}

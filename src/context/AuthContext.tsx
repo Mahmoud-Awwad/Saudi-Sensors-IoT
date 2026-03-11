@@ -29,10 +29,10 @@ const MOCK_DB: UserProfile[] = [
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Default to null in real app, but auto-logging in as Admin for dev convenience initially
-    const [currentUser, setCurrentUser] = useState<UserProfile | null>(MOCK_DB[0]);
+    // Start as null so the Auth Guard correctly redirects unauthenticated users
+    const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
-    const login = async (email: string, pass: string) => {
+    const login = async (email: string, _pass: string) => {
         // Mock API delay
         await new Promise(res => setTimeout(res, 800));
 

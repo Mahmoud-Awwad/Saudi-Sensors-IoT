@@ -164,9 +164,9 @@ export const TaskManage: React.FC = () => {
                                 <div className="flex flex-col flex-1 min-w-[300px]">
                                     <label className="text-sm font-medium text-[var(--color-text-muted)] mb-2 block">Quick Templates</label>
                                     <div className="flex gap-2">
-                                        <button className="template-btn" onClick={() => loadTemplate('standard')}>Standard</button>
-                                        <button className="template-btn" onClick={() => loadTemplate('highway')}>Highway</button>
-                                        <button className="template-btn" onClick={() => loadTemplate('security')}>Security</button>
+                                        <button className="btn-chip" onClick={() => loadTemplate('standard')}>Standard</button>
+                                        <button className="btn-chip" onClick={() => loadTemplate('highway')}>Highway</button>
+                                        <button className="btn-chip" onClick={() => loadTemplate('security')}>Security</button>
                                     </div>
                                 </div>
                             </div>
@@ -260,7 +260,7 @@ export const TaskManage: React.FC = () => {
                     )}
 
                     <div className="mt-6 pt-4 border-t border-[rgba(255,255,255,0.05)] flex gap-4">
-                        <button className="btn-secondary flex-1 justify-center py-3 border border-[var(--color-border)] hover:bg-[rgba(255,255,255,0.05)]" onClick={handleSaveProfile}>
+                        <button className="btn-glass flex-1" onClick={handleSaveProfile}>
                             <Save size={18} /> Save Profile Locally
                         </button>
                         <button className="btn-primary flex-1 justify-center py-3" onClick={handleUpload}>
