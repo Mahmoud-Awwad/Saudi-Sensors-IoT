@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePermissions } from '../hooks/usePermissions';
-import { AlertCircle, ShieldAlert, CheckCircle2, Clock, Check, Loader2, Search, Activity, Zap, Server } from 'lucide-react';
+import { AlertCircle, ShieldAlert, CheckCircle2, Clock, Check, Loader2, Search, Activity, Zap, Server, ChevronLeft, ChevronRight } from 'lucide-react';
 import './EventCenter.css';
 
 interface Incident {
@@ -20,6 +20,16 @@ const mockIncidents: Incident[] = [
     { id: 'INC-903', type: 'Network', severity: 'Medium', desc: 'Gateway lost connection', time: '3 hours ago', status: 'Resolved', nodeId: 'GW-05', deviceType: 'Gateway' },
     { id: 'INC-904', type: 'Electrical', severity: 'Medium', desc: 'Power factor drop', time: '5 hours ago', status: 'Active', nodeId: 'GW-01', deviceType: 'Gateway' },
     { id: 'INC-905', type: 'Electrical', severity: 'High', desc: 'Lamp failure (0W draw)', time: '1 day ago', status: 'Active', nodeId: 'Pole-103', deviceType: 'Lamp' },
+    ...Array.from({ length: 22 }).map((_, i) => ({
+        id: `INC-9${10 + i}`,
+        type: (i % 3 === 0 ? 'Physical' : i % 2 === 0 ? 'Network' : 'Electrical') as any,
+        severity: (i % 5 === 0 ? 'Critical' : i % 3 === 0 ? 'High' : 'Medium') as any,
+        desc: `Auto-detected anomaly ${i + 1}`,
+        time: `${(i + 1) * 15} mins ago`,
+        status: 'Active' as any,
+        nodeId: i % 4 === 0 ? `GW-0${(i % 5) + 1}` : `Pole-${110 + i}`,
+        deviceType: (i % 4 === 0 ? 'Gateway' : 'Lamp') as any
+    }))
 ];
 
 export const EventCenter: React.FC = () => {
@@ -32,6 +42,15 @@ export const EventCenter: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState<'All' | 'Lamps' | 'Gateways'>('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [severityFilter, setSeverityFilter] = useState<'All' | 'Critical' | 'Warning' | 'Resolved'>('All');
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
+
+    // Reset page to 1 whenever filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeFilter, searchQuery, severityFilter]);
 
     const resolveIncident = (id: string) => {
         // Optimistically set to resolving state
@@ -65,6 +84,10 @@ export const EventCenter: React.FC = () => {
 
         return matchesType && matchesSearch && matchesSeverity;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredActive.length / ITEMS_PER_PAGE);
+    const paginatedActive = filteredActive.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     const filteredResolved = resolvedIncidents.filter(inc => {
         const matchesType = activeFilter === 'All' ? true :
@@ -159,34 +182,34 @@ export const EventCenter: React.FC = () => {
                     </div>
 
                     {(severityFilter === 'All' || severityFilter === 'Critical' || severityFilter === 'Warning') && (
-                        <div className="flex flex-col gap-4">
-                            {filteredActive.map(inc => (
+                        <div className="flex flex-col gap-2">
+                            {paginatedActive.map(inc => (
                                 <div key={inc.id} className="incident-card active">
                                     <div className="flex justify-between items-center">
-                                        <div className="flex items-start gap-4">
+                                        <div className="flex items-start gap-3">
                                             <div className={`severity-icon ${inc.severity.toLowerCase()}`}>
-                                                <AlertCircle size={24} />
+                                                <AlertCircle size={20} />
                                             </div>
                                             <div>
-                                                <div className="text-white font-bold text-lg">{inc.desc}</div>
-                                                <div className="text-sm text-[var(--color-text-muted)] flex items-center gap-3 mt-1">
-                                                    <span>Node: <span style={{ color: 'var(--color-primary)' }}>{inc.nodeId}</span> <span className="text-xs px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.1)] ml-1">{inc.deviceType}</span></span>
+                                                <div className="text-white font-bold text-base leading-tight">{inc.desc}</div>
+                                                <div className="text-xs text-[var(--color-text-muted)] flex items-center gap-2 mt-0.5">
+                                                    <span>Node: <span style={{ color: 'var(--color-primary)' }}>{inc.nodeId}</span> <span className="text-[10px] px-1 py-0.5 rounded bg-[rgba(255,255,255,0.1)] ml-1">{inc.deviceType}</span></span>
                                                     <span>•</span>
-                                                    <span className="flex items-center gap-1"><Clock size={14} /> {inc.time}</span>
+                                                    <span className="flex items-center gap-1"><Clock size={12} /> {inc.time}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <button
-                                            className={`btn-primary flex items-center gap-2 ${inc.status === 'Resolving' ? 'opacity-70 cursor-wait' : ''}`}
+                                            className={`btn-primary flex items-center gap-1.5 ${inc.status === 'Resolving' ? 'opacity-70 cursor-wait' : ''}`}
                                             onClick={() => resolveIncident(inc.id)}
-                                            style={{ padding: '0.4rem 1.2rem', minWidth: '120px', justifyContent: 'center' }}
+                                            style={{ padding: '0.3rem 0.8rem', minWidth: '100px', fontSize: '0.85rem', justifyContent: 'center' }}
                                             disabled={inc.status === 'Resolving'}
                                         >
                                             {inc.status === 'Resolving' ? (
-                                                <><Loader2 size={16} className="animate-spin" /> Validating...</>
+                                                <><Loader2 size={14} className="animate-spin" /> Validating...</>
                                             ) : (
-                                                <><Check size={16} /> Resolve</>
+                                                <><Check size={14} /> Resolve</>
                                             )}
                                         </button>
                                     </div>
@@ -195,6 +218,42 @@ export const EventCenter: React.FC = () => {
                             {filteredActive.length === 0 && (
                                 <div className="text-center py-8 text-[var(--color-text-muted)] bg-[rgba(0,0,0,0.2)] rounded-lg border border-[var(--color-border)]">
                                     No alarms match your current filters.
+                                </div>
+                            )}
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-between items-center mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)] text-sm">
+                                    <span className="text-[var(--color-text-muted)]">
+                                        Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredActive.length)} of {filteredActive.length}
+                                    </span>
+                                    <div className="flex gap-2">
+                                        <button
+                                            className="btn-secondary flex items-center gap-1 justify-center px-3 py-1 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        >
+                                            <ChevronLeft size={16} /> Prev
+                                        </button>
+                                        <div className="flex gap-1">
+                                            {Array.from({ length: totalPages }).map((_, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all ${currentPage === idx + 1 ? 'bg-[var(--color-primary)] text-white shadow-lg' : 'bg-[rgba(255,255,255,0.05)] text-[var(--color-text-muted)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white border border-[rgba(255,255,255,0.02)]'}`}
+                                                    onClick={() => setCurrentPage(idx + 1)}
+                                                >
+                                                    {idx + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button
+                                            className="btn-secondary flex items-center gap-1 justify-center px-3 py-1 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        >
+                                            Next <ChevronRight size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>

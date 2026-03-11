@@ -1,5 +1,5 @@
 .incident-card {
-    padding: 1.5rem;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -13,7 +13,7 @@
 
 .incident-card.resolved {
     opacity: 0.7;
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
     border-left: 4px solid var(--color-success);
 }
 

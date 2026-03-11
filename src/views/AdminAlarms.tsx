@@ -103,7 +103,17 @@ export const AdminAlarms: React.FC = () => {
     };
 
     const handleDownloadTemplate = () => {
-        const csvContent = "data:text/csv;charset=utf-8,Name,Type,Severity,TargetLevel,TargetID,Condition\nNode Voltage Spike,Lamp,Critical,Global,All,Over Voltage (> 260V)\nGateway Disconnect,Gateway,Warning,Project,proj-1,Internet Disconnect";
+        const header = "Name,Type,Severity,TargetLevel,TargetID,Condition\n";
+        const sampleData = [
+            "Node Voltage Spike,Lamp,Critical,Global,All,Over Voltage (> 260V)",
+            "Gateway Internet Drop,Gateway,Warning,Project,proj-1,Internet Disconnect",
+            "Pole Tilt Danger,Lamp,Critical,District,Sector-A,Pole Tilting Detected",
+            "Under Voltage Warning,Lamp,Warning,Pole,Pole-101,Under Voltage (< 190V)",
+            "High Temp Alert,Gateway,Info,Gateway,GW-1,High Temperature (> 70°C)",
+            "Night Dark Alert,Lamp,Critical,Project,proj-2,Night-Dark (OFF in nighttime)",
+            "Missed Heartbeats,Gateway,Warning,Global,All,Offline (> 3 Missed Heartbeats)"
+        ].join("\n");
+        const csvContent = "data:text/csv;charset=utf-8," + header + sampleData;
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
