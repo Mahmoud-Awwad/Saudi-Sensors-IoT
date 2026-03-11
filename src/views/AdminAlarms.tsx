@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BellRing, Plus, Edit2, Trash2, Filter, AlertTriangle, Lightbulb, Network, Activity } from 'lucide-react';
+import { BellRing, Plus, Edit2, Trash2, Filter, AlertTriangle, Lightbulb, Network, Activity, Upload, Download } from 'lucide-react';
 
 export type AlarmType = 'Lamp' | 'Gateway';
 export type AlarmSeverity = 'Critical' | 'Warning' | 'Info';
@@ -58,6 +58,7 @@ const mockAlarms: AlarmRule[] = [
 
 export const AdminAlarms: React.FC = () => {
     const [alarms, setAlarms] = useState<AlarmRule[]>(mockAlarms);
+    const [isSimulatingUpload, setIsSimulatingUpload] = useState(false);
 
     // Create/Edit Modal State
     const [showCreate, setShowCreate] = useState(false);
@@ -91,6 +92,25 @@ export const AdminAlarms: React.FC = () => {
         if (def) {
             setMetricParamValue(def.defaultParamValue);
         }
+    };
+
+    const handleBatchUpload = () => {
+        setIsSimulatingUpload(true);
+        setTimeout(() => {
+            alert("CSV successfully parsed. 12 Alarm Rules ingested.");
+            setIsSimulatingUpload(false);
+        }, 1500);
+    };
+
+    const handleDownloadTemplate = () => {
+        const csvContent = "data:text/csv;charset=utf-8,Name,Type,Severity,TargetLevel,TargetID,Condition\nNode Voltage Spike,Lamp,Critical,Global,All,Over Voltage (> 260V)\nGateway Disconnect,Gateway,Warning,Project,proj-1,Internet Disconnect";
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "alarm_rules_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const handleCreateAlarm = (e: React.FormEvent) => {
@@ -190,9 +210,18 @@ export const AdminAlarms: React.FC = () => {
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)]">Configure threshold triggers and alerting targets across the infrastructure.</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowCreate(true)}>
-                    <Plus size={18} /> Create Rule
-                </button>
+                <div className="flex items-center gap-3">
+                    <button className="btn-secondary flex items-center gap-2 text-[var(--color-primary)]" onClick={handleDownloadTemplate}>
+                        <Download size={16} /> Template
+                    </button>
+                    <button className="btn-secondary flex items-center gap-2" onClick={handleBatchUpload} disabled={isSimulatingUpload}>
+                        {isSimulatingUpload ? <span className="animate-spin">◷</span> : <Upload size={16} />}
+                        Batch Upload
+                    </button>
+                    <button className="btn-primary flex items-center gap-2" onClick={() => setShowCreate(true)}>
+                        <Plus size={18} /> Create Rule
+                    </button>
+                </div>
             </div>
 
             {/* Create Form */}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import type { UserRole } from '../context/AuthContext';
-import { UserPlus, Edit2, Shield, Trash2, Users, Server, BellRing } from 'lucide-react';
+import { UserPlus, Edit2, Shield, Trash2, Users, Server, BellRing, Upload, Download } from 'lucide-react';
 import { AdminInfrastructure } from './AdminInfrastructure';
 import { AdminAlarms } from './AdminAlarms';
 
@@ -35,6 +35,7 @@ export const AdminPanel: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<'users' | 'infra' | 'alarms'>('users');
     const [users, setUsers] = useState<UserData[]>(mockUsers);
+    const [isSimulatingUpload, setIsSimulatingUpload] = useState(false);
 
     // Add/Edit User Modal State
     const [showAddUser, setShowAddUser] = useState(false);
@@ -126,6 +127,25 @@ export const AdminPanel: React.FC = () => {
         }
     };
 
+    const handleBatchUpload = () => {
+        setIsSimulatingUpload(true);
+        setTimeout(() => {
+            alert("CSV successfully parsed. 5 Users ingested.");
+            setIsSimulatingUpload(false);
+        }, 1500);
+    };
+
+    const handleDownloadTemplate = () => {
+        const csvContent = "data:text/csv;charset=utf-8,FullName,Email,Role,AccessibleEntities\nJane Smith,jane@saudisensors.com,Operator,\"Jeddah Coastal Hub, Dammam Industrial Area\"\nBob Jones,bob@saudisensors.com,Viewer,\"All\"";
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "users_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-6">
@@ -166,9 +186,18 @@ export const AdminPanel: React.FC = () => {
                                 <h3 className="text-lg font-bold text-white">System Users</h3>
                                 <p className="text-sm text-[var(--color-text-muted)]">Control access levels and permissions for the platform.</p>
                             </div>
-                            <button className="btn-primary" onClick={() => setShowAddUser(true)}>
-                                <UserPlus size={18} /> Add New User
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button className="btn-secondary flex items-center gap-2 text-[var(--color-primary)]" onClick={handleDownloadTemplate}>
+                                    <Download size={16} /> Template
+                                </button>
+                                <button className="btn-secondary flex items-center gap-2" onClick={handleBatchUpload} disabled={isSimulatingUpload}>
+                                    {isSimulatingUpload ? <span className="animate-spin">◷</span> : <Upload size={16} />}
+                                    Batch Upload
+                                </button>
+                                <button className="btn-primary flex items-center gap-2" onClick={() => setShowAddUser(true)}>
+                                    <UserPlus size={18} /> Add New User
+                                </button>
+                            </div>
                         </div>
 
                         {showAddUser && (
