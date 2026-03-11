@@ -12,6 +12,7 @@ import { TaskManage } from './views/TaskManage';
 import { NetworkManage } from './views/NetworkManage';
 import { AdminPanel } from './views/AdminPanel';
 import { Login } from './views/Login';
+import { Reports } from './views/Reports';
 
 const ProtectedRoute = () => {
   const { currentUser } = useAuth();
@@ -37,9 +38,11 @@ function App() {
                 <Route path="tasks" element={<TaskManage />} />
                 <Route path="gateways" element={<GatewayManage />} />
                 <Route path="network" element={<NetworkManage />} />
+                <Route path="reports" element={<Reports />} />
                 <Route path="admin" element={<AdminPanel />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
+
             </Route>
           </Routes>
         </BrowserRouter>

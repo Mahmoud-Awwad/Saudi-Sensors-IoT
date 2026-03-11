@@ -9,6 +9,7 @@ import {
     ChevronRight,
     ChevronDown,
     Upload,
+    Download,
     Save,
     Trash2,
     Server
@@ -57,6 +58,17 @@ export const AdminInfrastructure: React.FC = () => {
             alert("CSV successfully parsed. 1 Project, 3 Districts, 12 Gateways, and 450 Nodes ingested.");
             setIsSimulatingUpload(false);
         }, 1500);
+    };
+
+    const handleDownloadTemplate = () => {
+        const csvContent = "data:text/csv;charset=utf-8,Type,Name,ParentID\nProject,Riyadh Central District,\nDistrict,Downtown Sector A,proj-1\nGateway,GW-Alpha-01,dist-1\nPole,Pole-MainSt-001,gw-1\nNode,Lamp Node 1,pole-1";
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "infrastructure_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const getChildren = (parentId: string | null) => entities.filter(e => e.parentId === parentId);
@@ -189,7 +201,7 @@ export const AdminInfrastructure: React.FC = () => {
                 <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
                     {buildTree(null)}
                 </div>
-                <div className="p-4 border-t border-[var(--color-border)]">
+                <div className="p-4 border-t border-[var(--color-border)] flex flex-col gap-2">
                     <button
                         className="w-full btn-secondary flex justify-center gap-2 items-center text-sm py-2"
                         onClick={handleBatchUpload}
@@ -197,6 +209,13 @@ export const AdminInfrastructure: React.FC = () => {
                     >
                         {isSimulatingUpload ? <span className="animate-spin">◷</span> : <Upload size={16} />}
                         {isSimulatingUpload ? 'Parsing CSV...' : 'Batch Upload CSV'}
+                    </button>
+                    <button
+                        className="w-full flex justify-center gap-2 items-center text-sm py-2 text-[var(--color-primary)] hover:bg-[rgba(255,255,255,0.05)] rounded transition-colors"
+                        onClick={handleDownloadTemplate}
+                    >
+                        <Download size={16} />
+                        Download CSV Template
                     </button>
                 </div>
             </div>

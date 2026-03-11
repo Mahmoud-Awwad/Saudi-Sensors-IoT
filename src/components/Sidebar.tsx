@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, Lightbulb, Bell, Settings, Network, Users, Calendar, Menu, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Map, Lightbulb, Bell, Settings, Network, Users, Calendar, Menu, ChevronLeft, FileText } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 
 interface SidebarProps {
@@ -19,6 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
         { to: '/tasks', icon: Calendar, label: 'Schedules' },
         { to: '/gateways', icon: Network, label: 'Gateways' },
         { to: '/network', icon: Settings, label: 'Network' },
+        { to: '/reports', icon: FileText, label: 'Reports' },
         { to: '/admin', icon: Users, label: 'Admin', requiresAdminOrSupervisor: true },
     ];
 
